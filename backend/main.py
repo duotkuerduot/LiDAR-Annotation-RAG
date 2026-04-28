@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response, status
 from pydantic import BaseModel, Field
 
 from backend.config import settings
@@ -29,13 +29,44 @@ class QueryResponse(BaseModel):
     sources: list[SourceResponse]
 
 
+class ServiceStatusResponse(BaseModel):
+    status: str
+    ready: bool
+    missing_artifacts: list[str]
+    startup_error: str | None = None
+
+
+def _missing_artifacts() -> list[str]:
+    required_paths = (
+        settings.faiss_index_path,
+        settings.faiss_metadata_path,
+        settings.keyword_index_path,
+    )
+    return [str(path.relative_to(settings.project_root)) for path in required_paths if not path.exists()]
+
+
+def _service_status() -> ServiceStatusResponse:
+    pipeline = getattr(app.state, "pipeline", None)
+    startup_error = getattr(app.state, "startup_error", None)
+    missing_artifacts = _missing_artifacts()
+    ready = pipeline is not None
+    return ServiceStatusResponse(
+        status="ok" if ready else "degraded",
+        ready=ready,
+        missing_artifacts=missing_artifacts,
+        startup_error=startup_error,
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.pipeline = None
+    app.state.startup_error = None
     try:
         app.state.pipeline = RAGPipeline.from_settings(settings)
         logger.info("RAG pipeline initialized")
-    except Exception:
+    except Exception as exc:
+        app.state.startup_error = str(exc)
         logger.exception("Failed to initialize RAG pipeline")
     yield
 
@@ -45,6 +76,19 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+
+@app.get("/", response_model=ServiceStatusResponse)
+async def root() -> ServiceStatusResponse:
+    return _service_status()
+
+
+@app.get("/health", response_model=ServiceStatusResponse)
+async def health(response: Response) -> ServiceStatusResponse:
+    payload = _service_status()
+    if not payload.ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return payload
 
 
 @app.post("/query", response_model=QueryResponse)

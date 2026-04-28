@@ -1,3 +1,11 @@
+---
+title: Cruise Annotation RAG Backend
+colorFrom: blue
+colorTo: gray
+sdk: docker
+app_port: 7860
+---
+
 # Cruise Annotation RAG Backend
 
 Production-oriented Retrieval-Augmented Generation backend for Cruise LiDAR annotation support. The system ingests internal project documentation, performs hybrid retrieval across semantic and keyword indexes, reranks evidence, and returns grounded answers with citations so frontline labelers can resolve policy questions without escalating to QA.
@@ -104,6 +112,39 @@ From the project root:
 ```bash
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
+
+## Deploy On Hugging Face Spaces
+
+This repository is now set up for a Docker Space deployment.
+
+1. Create a new Hugging Face Space and choose `Docker` as the SDK.
+2. Push this repository to the Space.
+3. In the Space settings, add the secret `GROQ_API_KEY`.
+4. Keep the app port at `7860`.
+
+The container starts with `scripts/start.sh`, which:
+
+- boots the FastAPI app on port `7860`
+- checks for the required retrieval artifacts in `data/`
+- automatically runs ingestion if the artifacts are missing but `data/raw_docs/` contains source files
+
+Recommended deployment path:
+
+- Use a private or protected Space if your Cruise documents or generated indexes are sensitive.
+- Commit the generated runtime artifacts so the Space can start instantly:
+  - `data/faiss.index`
+  - `data/faiss_metadata.json`
+  - `data/keyword_index.pkl`
+
+Important note:
+
+- `faiss_metadata.json` and `keyword_index.pkl` can contain document text and metadata. Treat them as sensitive deployment assets just like the original docs.
+
+Useful endpoints after deploy:
+
+- `GET /`
+- `GET /health`
+- `POST /query`
 
 ## Example Request
 

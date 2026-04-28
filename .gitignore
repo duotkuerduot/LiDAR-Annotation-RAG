@@ -13,10 +13,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-data/faiss.index
-data/faiss_metadata.json
-data/keyword_index.pkl
-data/processed_chunks.json
-
+# Keep original source documents out of git by default.
 data/raw_docs/*
 !data/raw_docs/.gitkeep
+
+# Optional local-only artifact.
+data/processed_chunks.json
