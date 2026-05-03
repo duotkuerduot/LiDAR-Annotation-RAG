@@ -7,7 +7,7 @@ from typing import Iterable
 from backend.rag.ingest import RawDocument, RawElement
 from backend.utils.cleaners import slugify
 
-HEADING_STYLE_RE = re.compile(r"heading", re.IGNORECASE)
+HEADING_STYLE_RE = re.compile(r"heading|title|narrativetext", re.IGNORECASE)
 BULLET_RE = re.compile(r"^\s*(?:" + re.escape("\u2022") + r"|[-*]|\d+[.)]|[a-zA-Z][.)])\s+")
 RULE_RE = re.compile(
     r"\b(must|should|shall|always|never|do not|don't|cannot|can not|required|only if)\b",

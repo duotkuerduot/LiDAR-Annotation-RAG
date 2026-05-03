@@ -79,17 +79,52 @@ class DocumentIngestor:
         return document
 
     def _load_pdf(self, path: Path) -> list[RawElement]:
+        """
+        Robust PDF extraction using 'unstructured' with 'ocr_only' strategy.
+        Handles scanned images, electronic text, and PPTX conversions.
+        Avoids 'onnxruntime' crashes by bypassing heavy AI layout models.
+        """
         try:
-            from pypdf import PdfReader
+            from unstructured.partition.pdf import partition_pdf
         except ImportError as exc:
-            raise ImportError("Install pypdf to ingest PDF files.") from exc
+            raise ImportError(
+                "Install unstructured[pdf], opencv-python-headless, and pytesseract."
+            ) from exc
 
-        reader = PdfReader(str(path))
+
+        unstructured_elements = partition_pdf(
+            filename=str(path),
+            strategy="ocr_only",
+            ocr_languages="eng",
+            include_page_breaks=True,
+            chunking_strategy=None,
+        )
+
         elements: list[RawElement] = []
-        for page_index, page in enumerate(reader.pages, start=1):
-            text = clean_document_text(page.extract_text() or "")
-            for paragraph in self._split_into_blocks(text):
-                elements.append(RawElement(text=paragraph, page_number=page_index))
+        for el in unstructured_elements:
+            # Capture metadata for page numbering
+            page_num = getattr(el.metadata, "page_number", None)
+            
+            # Skip physical page break elements but use them to track page_num
+            if el.category == "PageBreak":
+                continue
+
+            # Clean the text using existing cleaner
+            text = clean_document_text(el.text)
+            if not text:
+                continue
+
+            # Extract the element category (e.g., 'Title', 'NarrativeText') 
+            # to help the SmartChunker identify headings.
+            style = el.category if hasattr(el, "category") else None
+
+            # Split into blocks and preserve page/style metadata
+            for block in self._split_into_blocks(text):
+                elements.append(RawElement(
+                    text=block, 
+                    page_number=page_num, 
+                    style=style
+                ))
         return elements
 
     def _load_docx(self, path: Path) -> list[RawElement]:

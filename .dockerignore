@@ -9,7 +9,3 @@ __pycache__
 .mypy_cache
 .ruff_cache
 htmlcov
-frontend
-
-data/raw_docs/*
-!data/raw_docs/.gitkeep

@@ -12,10 +12,5 @@ __pycache__/
 htmlcov/
 .DS_Store
 Thumbs.db
-
-# Keep original source documents out of git by default.
-data/raw_docs/*
-!data/raw_docs/.gitkeep
-
-# Optional local-only artifact.
-data/processed_chunks.json
+*.index
+*.pkl

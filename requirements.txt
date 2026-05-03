@@ -1,10 +1,29 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
-sentence-transformers
-faiss-cpu
+
+# Embeddings & Retrieval
+sentence-transformers==2.6.1
+faiss-cpu==1.7.4
 rank-bm25
+numpy
+
+# LLM API
 groq
+
+# Document parsing
 pypdf
 python-docx
-numpy
+
+# Unstructured
+unstructured[pdf]==0.12.6
+
+# OCR
+pdf2image==1.17.0
+pytesseract==0.3.10
+
+# Lightweight OpenCV
+opencv-python-headless==4.9.0.80
+
+# NLP
+nltk==3.8.1

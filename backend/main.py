@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Response, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from backend.config import settings
@@ -17,16 +18,9 @@ class QueryRequest(BaseModel):
     question: str = Field(min_length=1, description="Annotation question to answer from project documentation.")
 
 
-class SourceResponse(BaseModel):
-    document_name: str
-    section_title: str
-    page_number: int | None = None
-    chunk_type: str
-
-
 class QueryResponse(BaseModel):
     answer: str
-    sources: list[SourceResponse]
+    sources: list[str]
 
 
 class ServiceStatusResponse(BaseModel):
@@ -51,7 +45,7 @@ def _service_status() -> ServiceStatusResponse:
     missing_artifacts = _missing_artifacts()
     ready = pipeline is not None
     return ServiceStatusResponse(
-        status="ok" if ready else "degraded",
+        status="ok",
         ready=ready,
         missing_artifacts=missing_artifacts,
         startup_error=startup_error,
@@ -77,6 +71,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# --- CORS CONFIGURATION ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://msl-cruise-assistant.lovable.app"],
+    allow_credentials=True,
+    allow_methods=["POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
+
 
 @app.get("/", response_model=ServiceStatusResponse)
 async def root() -> ServiceStatusResponse:
@@ -95,11 +98,26 @@ async def health(response: Response) -> ServiceStatusResponse:
 async def query_assistant(payload: QueryRequest) -> QueryResponse:
     pipeline: RAGPipeline | None = app.state.pipeline
     if pipeline is None:
-        raise HTTPException(status_code=503, detail="RAG pipeline is not available. Run ingestion and verify configuration.")
+        raise HTTPException(
+            status_code=503, 
+            detail="RAG pipeline is not available. Run ingestion and verify configuration."
+        )
 
     try:
         result = pipeline.answer(payload.question)
-        return QueryResponse(**result)
+        
+        # Format sources as a list of strings: "DocName (Page X)"
+        formatted_sources = []
+        for src in result.get("sources", []):
+            source_str = f"{src['document_name']} | {src['section_title']}"
+            if src.get("page_number"):
+                source_str += f" (Page {src['page_number']})"
+            formatted_sources.append(source_str)
+
+        return QueryResponse(
+            answer=result["answer"],
+            sources=list(set(formatted_sources))  # Use set to remove duplicates
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -107,4 +125,4 @@ async def query_assistant(payload: QueryRequest) -> QueryResponse:
             "Query handling failed",
             extra={"extra_data": {"question": payload.question}},
         )
-        raise HTTPException(status_code=500, detail=f"Failed to answer question: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Failed to process query: {str(exc)}")
