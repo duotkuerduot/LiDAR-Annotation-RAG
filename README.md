@@ -71,7 +71,7 @@ set GROQ_API_KEY=your_groq_api_key
 Optional configuration:
 
 ```bash
-set GROQ_MODEL_NAME=llama-3.1-8b-instant
+set GROQ_MODEL_NAME=openai/gpt-oss-20b
 set EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
 set RERANKER_MODEL_NAME=cross-encoder/ms-marco-MiniLM-L-6-v2
 ```
