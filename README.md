@@ -1,14 +1,14 @@
 ---
-title: Cruise Annotation RAG Backend
+title: LiDAR Annotation RAG Backend
 colorFrom: blue
 colorTo: gray
 sdk: docker
 app_port: 7860
 ---
 
-# Cruise Annotation RAG Backend
+# LiDAR Annotation RAG Backend
 
-Production-oriented Retrieval-Augmented Generation backend for Cruise LiDAR annotation support. The system ingests internal project documentation, performs hybrid retrieval across semantic and keyword indexes, reranks evidence, and returns grounded answers with citations so frontline labelers can resolve policy questions without escalating to QA.
+Production-oriented Retrieval-Augmented Generation backend for LiDAR annotation support. The system ingests internal project documentation, performs hybrid retrieval across semantic and keyword indexes, reranks evidence, and returns grounded answers with citations so frontline labelers can resolve policy questions without escalating to QA.
 
 ## Architecture
 
@@ -28,7 +28,7 @@ Production-oriented Retrieval-Augmented Generation backend for Cruise LiDAR anno
 ## Project Layout
 
 ```text
-MSL Cruise/
+LiDAR Annotation RAG/
 ├── backend/
 │   ├── config.py
 │   ├── main.py
@@ -71,7 +71,7 @@ set GROQ_API_KEY=your_groq_api_key
 Optional configuration:
 
 ```bash
-set GROQ_MODEL_NAME=openai/gpt-oss-20b
+set GROQ_MODEL_NAME=llama-3.1-8b-instant
 set EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
 set RERANKER_MODEL_NAME=cross-encoder/ms-marco-MiniLM-L-6-v2
 ```

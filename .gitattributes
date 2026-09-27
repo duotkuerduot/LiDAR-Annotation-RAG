@@ -37,3 +37,5 @@ data/raw_docs/MSL[[:space:]]Glossary.docx filter=lfs diff=lfs merge=lfs -text
 data/raw_docs/Person[[:space:]]Posture[[:space:]]TVAs.docx filter=lfs diff=lfs merge=lfs -text
 data/raw_docs/Person[[:space:]]Taxonomy.docx filter=lfs diff=lfs merge=lfs -text
 data/raw_docs/Personal[[:space:]]Portable[[:space:]]Mobility[[:space:]]Device[[:space:]](PPMV)[[:space:]][[:space:]]Taxonomy.docx filter=lfs diff=lfs merge=lfs -text
+data/raw_docs/Emergency[[:space:]]Vehicles[[:space:]](EMV).docx filter=lfs diff=lfs merge=lfs -text
+data/raw_docs/EMV_[[:space:]]Police[[:space:]]Motorcycles[[:space:]]with[[:space:]]Illumination.docx filter=lfs diff=lfs merge=lfs -text
